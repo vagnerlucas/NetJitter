@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>NetJitterAPI</name>
+    </assembly>
+    <members>
+        <member name="M:NetJitterAPI.Controllers.Filters.BindJson.OnActionExecuting(System.Web.Http.Controllers.HttpActionContext)">
+            <summary>
+            ActionFilterAttribute override
+            </summary>
+            <param name="actionContext"></param>
+        </member>
+    </members>
+</doc>
