@@ -1,0 +1,39 @@
+<div>
+Update Interval:
+<select [(ngModel)]="selectedInterval" (ngModelChange)="onSelectChange($event)">
+    <option value="5">5 seconds</option>
+    <option value="15">15 seconds</option>
+    <option value="30">30 seconds</option>
+    <option value="60">1 minute</option>
+</select>
+</div>
+<hr />
+<div>
+    <!--<server-form></server-form>-->
+</div>
+<table class="table table-striped table-hover" id="mainTable">
+    <thead>
+        <tr>
+            <th>Server Description</th>
+            <th>Server Name</th>
+            <th>IP Address</th>
+            <th>Ping</th>
+            <th>Jitter</th>
+            <th></th>
+            <th>Options</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody">
+        <tr *ngFor="let server of serverStatsList | async">
+            <td>{{server.Server.DESCRIPTION}}</td>
+            <td>{{server.Server.NAME}}</td>
+            <td>{{server.Server.IP_ADDRESS}}</td>
+            <td>{{server.Ping}}</td>
+            <td>{{server.Jitter}}</td>
+            <!--<td><gauge-component [tag]="'P'" [id]="server.Server.ID" [server]="server" [value]="updatePing(server.Server)" (onAfterCreate)="createGauge($event)"></gauge-component></td>
+            <td><gauge-component [tag]="'J'" [id]="server.Server.ID" [server]="server" [value]="updatePing(server.Server)" (onAfterCreate)="createGauge($event)"></gauge-component></td>-->
+            <td></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
