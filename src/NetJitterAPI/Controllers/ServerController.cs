@@ -18,39 +18,43 @@ namespace NetJitterAPI.Controllers
         {
             var responseModel = new HttpResponseModel();
 
-            if (!ModelState.IsValid)
+            try
             {
-                responseModel.ResponseType = ResponseType.rtError;
-                responseModel.Message = "Some required fields or values are invalid";
-
-                string modelFields = string.Join(" | ", ModelState.Keys
-                                                .Select(v => v));
-
-                string errMessage = string.Join(" | ", ModelState.Values
-                                            .SelectMany(v => v.Errors)
-                                            .Select(e => e.ErrorMessage));
-                responseModel.Exception = "Exception info: " + modelFields + " :: " + errMessage;
-            }
-            else
-            {
-                try
+                responseModel = await Task.Run(() =>
                 {
-                    using (context = new LocalDatabaseEntities())
+                    if (!ModelState.IsValid)
                     {
-                        var server = context.SERVER.Add(model);
-                        context.SaveChanges();
-                        responseModel.ResponseType = ResponseType.rtSuccess;
-                        responseModel.Message = "Added successfully";
-                        responseModel.Data = server;
+                        responseModel.ResponseType = ResponseType.rtError;
+                        responseModel.Message = "Some required fields or values are invalid";
+
+                        string modelFields = string.Join(" | ", ModelState.Keys
+                                                        .Select(v => v));
+
+                        string errMessage = string.Join(" | ", ModelState.Values
+                                                    .SelectMany(v => v.Errors)
+                                                    .Select(e => e.ErrorMessage));
+                        responseModel.Exception = "Exception info: " + modelFields + " :: " + errMessage;
                     }
-                }
-                catch (Exception ex)
-                {
-                    responseModel.ResponseType = ResponseType.rtError;
-                    responseModel.Message = "An error has occurred";
-                    responseModel.Exception = ex;
-                }
+                    else
+                    {
+                        using (context = new LocalDatabaseEntities())
+                        {
+                            var server = context.SERVER.Add(model);
+                            context.SaveChanges();
+                            responseModel.ResponseType = ResponseType.rtSuccess;
+                            responseModel.Message = "Added successfully";
+                            responseModel.Data = server;
+                        }
+                    }
+
+                    return responseModel;
+                });
             }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+
             return Ok<HttpResponseModel>(responseModel);
         }
 
@@ -61,21 +65,28 @@ namespace NetJitterAPI.Controllers
 
             try
             {
-                using (context = new LocalDatabaseEntities())
+                responseModel = await Task.Run(() =>
                 {
-                    var entityServer = context.SERVER.Find(model.ID);
-                    if (entityServer == null) throw new Exception("SERVER not found to remove");
+                    using (context = new LocalDatabaseEntities())
+                    {
+                        var entityServer = context.SERVER.Find(model.ID);
+                        if (entityServer == null) throw new Exception("SERVER not found to remove");
 
-                    context.SERVER.Remove(entityServer);
+                        var r = context.SERVER.Remove(entityServer);
 
-                    context.SaveChanges();
-                }
+                        context.SaveChanges();
+
+                        responseModel.Data = r;
+                        responseModel.Message = "Removed successfully";
+                        responseModel.ResponseType = ResponseType.rtSuccess;
+
+                        return responseModel;
+                    }
+                });
             }
             catch (Exception ex)
             {
-                responseModel.ResponseType = ResponseType.rtError;
-                responseModel.Message = "An error has occurred";
-                responseModel.Exception = ex;
+                return InternalServerError(ex);
             }
 
             return Ok<HttpResponseModel>(responseModel);
@@ -86,42 +97,46 @@ namespace NetJitterAPI.Controllers
         {
             var responseModel = new HttpResponseModel();
 
-            if (!ModelState.IsValid)
+            try
             {
-                responseModel.ResponseType = ResponseType.rtError;
-                responseModel.Message = "Some required fields or values are invalid";
-
-                string modelFields = string.Join(" | ", ModelState.Keys
-                                                .Select(v => v));
-
-                string errMessage = string.Join(" | ", ModelState.Values
-                                            .SelectMany(v => v.Errors)
-                                            .Select(e => e.ErrorMessage));
-                responseModel.Exception = "Exception info: " + modelFields + " :: " + errMessage;
-            }
-            else
-            {
-                try
+                responseModel = await Task.Run(() =>
                 {
-                    using (context = new LocalDatabaseEntities())
+                    if (!ModelState.IsValid)
                     {
-                        var entityServer = context.SERVER.Find(model.ID);
-                        if (entityServer == null) throw new Exception("SERVER not found to edit");
+                        responseModel.ResponseType = ResponseType.rtError;
+                        responseModel.Message = "Some required fields or values are invalid";
 
-                        entityServer.DESCRIPTION = model.DESCRIPTION;
-                        entityServer.IP_ADDRESS = model.IP_ADDRESS;
-                        entityServer.NAME = model.NAME;
+                        string modelFields = string.Join(" | ", ModelState.Keys
+                                                        .Select(v => v));
 
-                        context.SaveChanges();
+                        string errMessage = string.Join(" | ", ModelState.Values
+                                                    .SelectMany(v => v.Errors)
+                                                    .Select(e => e.ErrorMessage));
+                        responseModel.Exception = "Exception info: " + modelFields + " :: " + errMessage;
                     }
-                }
-                catch (Exception ex)
-                {
-                    responseModel.ResponseType = ResponseType.rtError;
-                    responseModel.Message = "An error has occurred";
-                    responseModel.Exception = ex;
-                }
+                    else
+                    {
+                        using (context = new LocalDatabaseEntities())
+                        {
+                            var entityServer = context.SERVER.Find(model.ID);
+                            if (entityServer == null) throw new Exception("SERVER not found to edit");
+
+                            entityServer.DESCRIPTION = model.DESCRIPTION;
+                            entityServer.IP_ADDRESS = model.IP_ADDRESS;
+                            entityServer.NAME = model.NAME;
+
+                            context.SaveChanges();
+                        }
+                    }
+
+                    return responseModel;
+                });
             }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+
             return Ok<HttpResponseModel>(responseModel);
         }
 
@@ -130,19 +145,21 @@ namespace NetJitterAPI.Controllers
             var responseModel = new HttpResponseModel();
             try
             {
-                using (context = new LocalDatabaseEntities())
+                responseModel = await Task.Run(() =>
                 {
-                    responseModel.ResponseType = ResponseType.rtSuccess;
-                    responseModel.Message = "Action executed successfully";
-                    responseModel.Data = context.SERVER.ToArray();
-                }
+                    using (context = new LocalDatabaseEntities())
+                    {
+                        responseModel.ResponseType = ResponseType.rtSuccess;
+                        responseModel.Message = "Action executed successfully";
+                        responseModel.Data = context.SERVER.ToArray();
+                    }
+
+                    return responseModel;
+                });
             }
             catch (Exception ex)
             {
-                responseModel.ResponseType = ResponseType.rtError;
-                responseModel.Message = "An error has occurred";
-                responseModel.Exception = ex;
-                //Even though it is an exception, return an "OK"
+                return InternalServerError(ex);
             }
 
             return Ok<HttpResponseModel>(responseModel);
@@ -154,7 +171,9 @@ namespace NetJitterAPI.Controllers
         {
             var responseModel = new HttpResponseModel();
 
-            responseModel.Data = pingServer.GetStatistics();
+            responseModel.ResponseType = ResponseType.rtSuccess;
+            responseModel.Message = "Listing servers";
+            responseModel.Data = await pingServer.GetStatistics();
 
             return Ok<HttpResponseModel>(responseModel);
         }

@@ -99,9 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Data\LocalDatabase.mdf" />
-    <Content Include="App_Data\LocalDatabase_log.ldf">
-      <DependentUpon>LocalDatabase.mdf</DependentUpon>
-    </Content>
     <Content Include="Global.asax" />
     <Content Include="Models\DefaultModel.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

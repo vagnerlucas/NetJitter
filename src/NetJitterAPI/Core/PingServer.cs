@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace NetJitterAPI.Core
@@ -16,7 +17,8 @@ namespace NetJitterAPI.Core
         {
             statisticModelList = statisticModelList ?? new List<StatisticModel>();
         }
-        public List<StatisticModel> GetStatistics()
+
+        public Task<List<StatisticModel>> GetStatistics()
         {
             var result = new List<StatisticModel>();
 
@@ -25,49 +27,52 @@ namespace NetJitterAPI.Core
                 statisticModelList.Clear();
             }
 
-            using (var context = new LocalDatabaseEntities())
+            return Task.Run(() =>
             {
-                Ping ping = new Ping();
-                context.SERVER.ToList().ForEach(w =>
+                using (var context = new LocalDatabaseEntities())
                 {
-                    string addr = string.Empty;
-
-                    if (string.IsNullOrWhiteSpace(w.NAME) && string.IsNullOrWhiteSpace(w.IP_ADDRESS))
-                        throw new Exception("Server name and IP Address not found");
-
-                    addr = string.IsNullOrWhiteSpace(w.NAME) ? w.IP_ADDRESS : w.NAME;
-
-                    try
+                    Ping ping = new Ping();
+                    context.SERVER.ToList().ForEach(w =>
                     {
-                        PingReply pingreply = ping.Send(addr);
-                        long pingLong = pingreply.RoundtripTime;
+                        string addr = string.Empty;
 
-                        var statisticModel = new StatisticModel() { Server = w, Ping = pingLong };
-                        var lastServer = statisticModelList.Where(x => x.Server.ID == statisticModel.Server.ID).LastOrDefault();
+                        if (string.IsNullOrWhiteSpace(w.NAME) && string.IsNullOrWhiteSpace(w.IP_ADDRESS))
+                            throw new Exception("Server name and IP Address not found");
 
-                        var lastPing = lastServer == null ? 0 : lastServer.Ping;
-                        statisticModel.Jitter = pingLong - lastPing < 0 ? 0 : pingLong - lastPing;
-                        statisticModelList.Add(statisticModel);
+                        addr = string.IsNullOrWhiteSpace(w.NAME) ? w.IP_ADDRESS : w.NAME;
 
-                        var statisticServerQ = statisticModelList.Where(x => x.Server.ID == statisticModel.Server.ID);
-                        var jitter = statisticServerQ.Select(s => s.Jitter).Sum() / statisticServerQ.Select(s => s.Jitter).Count();
-
-                        result.Add(new StatisticModel()
+                        try
                         {
-                            Server = statisticModel.Server,
-                            Jitter = jitter,
-                            Ping = pingLong
-                        });
+                            PingReply pingreply = ping.Send(addr);
+                            long pingLong = pingreply.RoundtripTime;
 
-                    }
-                    catch (Exception ex)
-                    {
-                        throw;
-                    }
-                });
-            }
+                            var statisticModel = new StatisticModel() { Server = w, Ping = pingLong };
+                            var lastServer = statisticModelList.Where(x => x.Server.ID == statisticModel.Server.ID).LastOrDefault();
 
-            return result;
+                            var lastPing = lastServer == null ? 0 : lastServer.Ping;
+                            statisticModel.Jitter = pingLong - lastPing < 0 ? 0 : pingLong - lastPing;
+                            statisticModelList.Add(statisticModel);
+
+                            var statisticServerQ = statisticModelList.Where(x => x.Server.ID == statisticModel.Server.ID);
+                            var jitter = statisticServerQ.Select(s => s.Jitter).Sum() / statisticServerQ.Select(s => s.Jitter).Count();
+
+                            result.Add(new StatisticModel()
+                            {
+                                Server = statisticModel.Server,
+                                Jitter = jitter,
+                                Ping = pingLong
+                            });
+
+                        }
+                        catch (Exception ex)
+                        {
+                            throw ex;
+                        }
+                    });
+
+                    return result;
+                }
+            });
         }
     }
 }
